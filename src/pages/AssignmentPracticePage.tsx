@@ -29,10 +29,18 @@ import { showSuccess, showError } from "@/utils/toast";
 
 interface AssignmentContent {
   instructions?: string;
-  materials?: string[];
+  materials?: (string | MaterialItem)[];
   questions?: AssignmentQuestion[];
   examples?: string[];
   readingPassage?: string;
+}
+
+interface MaterialItem {
+  note?: string;
+  type?: string;
+  label?: string;
+  audioUrl?: string;
+  transcript?: string;
 }
 
 interface AssignmentQuestion {
@@ -43,6 +51,10 @@ interface AssignmentQuestion {
   correctAnswer?: string;
   explanation?: string;
   id?: number;
+  audioUrl?: string;
+  transcript?: string;
+  maxPlays?: number;
+  allowRewind?: boolean;
 }
 
 interface RubricData {
@@ -135,10 +147,44 @@ const renderAssignmentContent = (content: unknown, assignment?: Assignment): Rea
         {contentObj.materials && Array.isArray(contentObj.materials) && (
           <div>
             <h4 className="font-semibold mb-2">Vật liệu cần thiết:</h4>
-            <ul className="list-disc list-inside text-gray-700">
-              {contentObj.materials.map((material: string, index: number) => (
-                <li key={index}>{material}</li>
-              ))}
+            <ul className="list-disc list-inside text-gray-700 space-y-2">
+              {contentObj.materials.map((material: string | MaterialItem, index: number) => {
+                // Handle string materials
+                if (typeof material === 'string') {
+                  return <li key={index}>{material}</li>;
+                }
+
+                // Handle object materials (AI-generated format)
+                const materialItem = material as MaterialItem;
+                return (
+                  <li key={index} className="bg-gray-50 p-3 rounded-lg">
+                    <div className="space-y-1">
+                      {materialItem.label && (
+                        <div className="font-medium text-gray-900">{materialItem.label}</div>
+                      )}
+                      {materialItem.note && (
+                        <div className="text-sm text-gray-600">{materialItem.note}</div>
+                      )}
+                      {materialItem.type && (
+                        <div className="text-xs text-gray-500 uppercase">{materialItem.type}</div>
+                      )}
+                      {materialItem.audioUrl && (
+                        <div className="mt-2">
+                          <audio controls className="w-full max-w-md">
+                            <source src={materialItem.audioUrl} type="audio/mpeg" />
+                            Trình duyệt của bạn không hỗ trợ phát audio.
+                          </audio>
+                        </div>
+                      )}
+                      {materialItem.transcript && (
+                        <div className="mt-2 text-sm text-gray-700 bg-white p-2 rounded border">
+                          <strong>Transcript:</strong> {materialItem.transcript}
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -529,6 +575,109 @@ const AssignmentPracticePage: React.FC = () => {
             <CardContent>
               <div className="prose prose-sm max-w-none">
                 <p className="text-gray-700 whitespace-pre-wrap">{content.readingPassage}</p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Audio Listening Section */}
+        {(assignment.contentType === 'audio' || assignment.skill?.toLowerCase() === 'listening') && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Nghe và trả lời câu hỏi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Audio Player */}
+                {content.questions && content.questions.length > 0 && (
+                  <div className="space-y-4">
+                    {content.questions.map((question: AssignmentQuestion, qIndex: number) => {
+                      if (question.audioUrl) {
+                        return (
+                          <div key={`audio-${qIndex}`} className="p-4 bg-blue-50 rounded-lg border">
+                            <h5 className="font-semibold mb-3">Audio {qIndex + 1}</h5>
+                            <audio
+                              controls
+                              className="w-full max-w-md"
+                              onPlay={() => {
+                                // Track audio plays if needed
+                                console.log(`Playing audio for question ${qIndex + 1}`);
+                              }}
+                            >
+                              <source src={question.audioUrl} type="audio/mpeg" />
+                              <source src={question.audioUrl} type="audio/wav" />
+                              <source src={question.audioUrl} type="audio/ogg" />
+                              Trình duyệt của bạn không hỗ trợ phát audio.
+                            </audio>
+
+                            {/* Transcript */}
+                            {question.transcript && (
+                              <div className="mt-3">
+                                <details className="group">
+                                  <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-800">
+                                    📄 Xem transcript
+                                  </summary>
+                                  <div className="mt-2 p-3 bg-white rounded border text-sm text-gray-700">
+                                    {question.transcript}
+                                  </div>
+                                </details>
+                              </div>
+                            )}
+
+                            {/* Audio Instructions */}
+                            <div className="mt-2 text-sm text-gray-600">
+                              💡 Bạn có thể nghe lại tối đa 2 lần. Hãy lắng nghe kỹ trước khi trả lời câu hỏi.
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                )}
+
+                {/* Fallback Audio Player from Materials */}
+                {!content.questions?.some((q: AssignmentQuestion) => q.audioUrl) && content.materials && (
+                  <div className="space-y-4">
+                    {content.materials.map((material: string | MaterialItem, index: number) => {
+                      if (typeof material === 'object' && material.audioUrl) {
+                        return (
+                          <div key={`material-audio-${index}`} className="p-4 bg-blue-50 rounded-lg border">
+                            <h5 className="font-semibold mb-3">
+                              {material.label || `Audio ${index + 1}`}
+                            </h5>
+                            <audio controls className="w-full max-w-md">
+                              <source src={material.audioUrl} type="audio/mpeg" />
+                              <source src={material.audioUrl} type="audio/wav" />
+                              <source src={material.audioUrl} type="audio/ogg" />
+                              Trình duyệt của bạn không hỗ trợ phát audio.
+                            </audio>
+
+                            {material.transcript && (
+                              <div className="mt-3">
+                                <details className="group">
+                                  <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-800">
+                                    📄 Xem transcript
+                                  </summary>
+                                  <div className="mt-2 p-3 bg-white rounded border text-sm text-gray-700">
+                                    {material.transcript}
+                                  </div>
+                                </details>
+                              </div>
+                            )}
+
+                            {material.note && (
+                              <div className="mt-2 text-sm text-gray-600">
+                                💡 {material.note}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

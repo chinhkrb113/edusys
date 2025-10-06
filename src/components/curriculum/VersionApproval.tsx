@@ -63,7 +63,7 @@ import {
 
 interface Version {
   id: string;
-  programId: string;
+  programId: string | number;
   status: 'draft' | 'pending_review' | 'approved' | 'published' | 'archived';
   createdBy: string;
   createdAt: string;
@@ -227,7 +227,7 @@ const VersionApproval = () => {
   const curriculumId = 1; // TODO: Get from URL params
 
   // State management
-  const [selectedVersion, setSelectedVersion] = useState<any>(null);
+  const [selectedVersion, setSelectedVersion] = useState<Version | null>(null);
   const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
   const [reviewComment, setReviewComment] = useState("");
   const [reviewAction, setReviewAction] = useState("");
@@ -530,7 +530,7 @@ const VersionApproval = () => {
                 <div
                   key={version.id}
                   className={`border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors ${
-                    selectedVersion.id === version.id ? "border-blue-500 bg-blue-50" : ""
+                    selectedVersion?.id === version.id ? "border-blue-500 bg-blue-50" : ""
                   }`}
                   onClick={() => setSelectedVersion(version)}
                 >
@@ -565,7 +565,7 @@ const VersionApproval = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Chi tiết phiên bản {selectedVersion.id}</CardTitle>
+              <CardTitle>Chi tiết phiên bản {selectedVersion?.id}</CardTitle>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline">
                   <EyeIcon className="mr-1 h-3 w-3" />
@@ -588,70 +588,80 @@ const VersionApproval = () => {
               </TabsList>
 
               <TabsContent value="details" className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Trạng thái</Label>
-                    <div className="mt-1">
-                      {getStatusBadge(selectedVersion.status)}
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium">Người tạo</Label>
-                    <p className="mt-1 text-sm">{selectedVersion.createdBy}</p>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium">Ngày tạo</Label>
-                    <p className="mt-1 text-sm">{selectedVersion.createdAt}</p>
-                  </div>
-
-                  {selectedVersion.approvedBy && (
+                {selectedVersion ? (
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-sm font-medium">Người duyệt</Label>
-                      <p className="mt-1 text-sm">{selectedVersion.approvedBy}</p>
+                      <Label className="text-sm font-medium">Trạng thái</Label>
+                      <div className="mt-1">
+                        {getStatusBadge(selectedVersion.status)}
+                      </div>
                     </div>
-                  )}
-                </div>
 
-                <div>
-                  <Label className="text-sm font-medium">Thay đổi</Label>
-                  <p className="mt-1 text-sm">{selectedVersion.changes}</p>
-                </div>
+                    <div>
+                      <Label className="text-sm font-medium">Người tạo</Label>
+                      <p className="mt-1 text-sm">{selectedVersion.createdBy}</p>
+                    </div>
 
-                <div>
-                  <Label className="text-sm font-medium">Reviewers</Label>
-                  <div className="mt-1 flex gap-1">
-                    {selectedVersion.reviewers.map((reviewer, idx) => (
-                      <Badge key={idx} variant="outline">{reviewer}</Badge>
-                    ))}
+                    <div>
+                      <Label className="text-sm font-medium">Ngày tạo</Label>
+                      <p className="mt-1 text-sm">{selectedVersion.createdAt}</p>
+                    </div>
+
+                    {selectedVersion.approvedBy && (
+                      <div>
+                        <Label className="text-sm font-medium">Người duyệt</Label>
+                        <p className="mt-1 text-sm">{selectedVersion.approvedBy}</p>
+                      </div>
+                    )}
                   </div>
-                </div>
-
-                {/* Content Summary */}
-                <div>
-                  <Label className="text-sm font-medium">Tóm tắt nội dung</Label>
-                  <div className="mt-2 grid grid-cols-3 gap-4 text-sm">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {selectedVersion.content.courses.length}
-                      </div>
-                      <div className="text-muted-foreground">Courses</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">
-                        {selectedVersion.content.courses.reduce((sum, c) => sum + c.units.length, 0)}
-                      </div>
-                      <div className="text-muted-foreground">Units</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-purple-600">
-                        {selectedVersion.content.courses.reduce((sum, c) => sum + c.hours, 0)}
-                      </div>
-                      <div className="text-muted-foreground">Hours</div>
-                    </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Chọn một phiên bản để xem chi tiết</p>
                   </div>
-                </div>
+                )}
+
+                {selectedVersion && (
+                  <>
+                    <div>
+                      <Label className="text-sm font-medium">Thay đổi</Label>
+                      <p className="mt-1 text-sm">{selectedVersion.changes}</p>
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-medium">Reviewers</Label>
+                      <div className="mt-1 flex gap-1">
+                        {selectedVersion.reviewers.map((reviewer, idx) => (
+                          <Badge key={idx} variant="outline">{reviewer}</Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Content Summary */}
+                    <div>
+                      <Label className="text-sm font-medium">Tóm tắt nội dung</Label>
+                      <div className="mt-2 grid grid-cols-3 gap-4 text-sm">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-blue-600">
+                            {selectedVersion.content.courses.length}
+                          </div>
+                          <div className="text-muted-foreground">Courses</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-green-600">
+                            {selectedVersion.content.courses.reduce((sum, c) => sum + c.units.length, 0)}
+                          </div>
+                          <div className="text-muted-foreground">Units</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-purple-600">
+                            {selectedVersion.content.courses.reduce((sum, c) => sum + c.hours, 0)}
+                          </div>
+                          <div className="text-muted-foreground">Hours</div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </TabsContent>
 
               <TabsContent value="diff" className="space-y-4">
@@ -690,205 +700,217 @@ const VersionApproval = () => {
               </TabsContent>
 
               <TabsContent value="comments" className="space-y-4">
-                <div className="space-y-3">
-                  {selectedVersion.comments.map((comment) => (
-                    <div key={comment.id} className="border rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2">
-                          <UserIcon className="h-4 w-4" />
-                          <span className="text-sm font-medium">{comment.user}</span>
-                          <span className="text-xs text-muted-foreground">{comment.date}</span>
+                {selectedVersion ? (
+                  <div className="space-y-3">
+                    {selectedVersion.comments.map((comment) => (
+                      <div key={comment.id} className="border rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <UserIcon className="h-4 w-4" />
+                            <span className="text-sm font-medium">{comment.user}</span>
+                            <span className="text-xs text-muted-foreground">{comment.date}</span>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedVersion(prev => ({
+                                ...prev,
+                                comments: prev.comments.map(c =>
+                                  c.id === comment.id ? { ...c, resolved: !c.resolved } : c
+                                )
+                              }));
+                            }}
+                          >
+                            {comment.resolved ? <CheckCircleIcon className="h-3 w-3 text-green-500" /> : <XCircleIcon className="h-3 w-3" />}
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedVersion(prev => ({
-                              ...prev,
-                              comments: prev.comments.map(c =>
-                                c.id === comment.id ? { ...c, resolved: !c.resolved } : c
-                              )
-                            }));
-                          }}
-                        >
-                          {comment.resolved ? <CheckCircleIcon className="h-3 w-3 text-green-500" /> : <XCircleIcon className="h-3 w-3" />}
-                        </Button>
+                        <p className="text-sm">{comment.text}</p>
                       </div>
-                      <p className="text-sm">{comment.text}</p>
-                    </div>
-                  ))}
+                    ))}
 
-                  {selectedVersion.comments.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Chưa có nhận xét nào
-                    </p>
-                  )}
-                </div>
+                    {selectedVersion.comments.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        Chưa có nhận xét nào
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Chọn một phiên bản để xem nhận xét</p>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="actions" className="space-y-4">
-                <div className="space-y-2">
-                  {selectedVersion.status === 'draft' && (
-                    <Button className="w-full" onClick={() => setSelectedVersion(prev => ({ ...prev, status: 'pending_review' }))}>
-                      <SendIcon className="mr-2 h-4 w-4" />
-                      Gửi duyệt
-                    </Button>
-                  )}
-
-                  {selectedVersion.status === 'pending_review' && (
-                    <div className="space-y-2">
-                      <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
-                        <DialogTrigger asChild>
-                          <Button className="w-full" variant="outline">
-                            <MessageSquareIcon className="mr-2 h-4 w-4" />
-                            Thêm nhận xét
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Thêm nhận xét cho phiên bản {selectedVersion.id}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <Label>Hành động</Label>
-                              <Select value={reviewAction} onValueChange={setReviewAction}>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Chọn hành động" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="approve">Duyệt</SelectItem>
-                                  <SelectItem value="reject">Từ chối</SelectItem>
-                                  <SelectItem value="comment">Chỉ nhận xét</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label>Nhận xét</Label>
-                              <Textarea
-                                value={reviewComment}
-                                onChange={(e) => setReviewComment(e.target.value)}
-                                placeholder="Nhập nhận xét của bạn..."
-                                rows={4}
-                              />
-                            </div>
-
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={() => handleReviewAction(reviewAction)}
-                                disabled={!reviewAction}
-                                className="flex-1"
-                              >
-                                Gửi
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => setIsReviewDialogOpen(false)}
-                              >
-                                Hủy
-                              </Button>
-                            </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-
-                      <Button className="w-full" onClick={() => handleReviewAction('approve')}>
-                        <CheckCircleIcon className="mr-2 h-4 w-4" />
-                        Duyệt phiên bản
+                {selectedVersion ? (
+                  <div className="space-y-2">
+                    {selectedVersion.status === 'draft' && (
+                      <Button className="w-full" onClick={() => setSelectedVersion(prev => ({ ...prev, status: 'pending_review' }))}>
+                        <SendIcon className="mr-2 h-4 w-4" />
+                        Gửi duyệt
                       </Button>
-                    </div>
-                  )}
+                    )}
 
-                  {selectedVersion.status === 'approved' && (
-                    <div className="space-y-2">
-                      <Button className="w-full" onClick={handlePublish}>
-                        <PlayCircleIcon className="mr-2 h-4 w-4" />
-                        Xuất bản
-                      </Button>
-
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button className="w-full" variant="outline">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            Lên lịch rollout
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Lên lịch rollout cho {selectedVersion.id}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div>
-                              <Label>Scope</Label>
-                              <Select defaultValue="campus">
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="campus">Campus</SelectItem>
-                                  <SelectItem value="program">Program</SelectItem>
-                                  <SelectItem value="global">Global</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <Label>Scheduled Date</Label>
-                              <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
-                            </div>
-
-                            <Button onClick={createRolloutPlan} className="w-full">
-                              Tạo rollout plan
+                    {selectedVersion.status === 'pending_review' && (
+                      <div className="space-y-2">
+                        <Dialog open={isReviewDialogOpen} onOpenChange={setIsReviewDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button className="w-full" variant="outline">
+                              <MessageSquareIcon className="mr-2 h-4 w-4" />
+                              Thêm nhận xét
                             </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  )}
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Thêm nhận xét cho phiên bản {selectedVersion.id}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <Label>Hành động</Label>
+                                <Select value={reviewAction} onValueChange={setReviewAction}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Chọn hành động" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="approve">Duyệt</SelectItem>
+                                    <SelectItem value="reject">Từ chối</SelectItem>
+                                    <SelectItem value="comment">Chỉ nhận xét</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
 
-                  {selectedVersion.status === 'published' && (
-                    <div className="space-y-2">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" className="w-full">
-                            <RotateCcwIcon className="mr-2 h-4 w-4" />
-                            Rollback
+                              <div>
+                                <Label>Nhận xét</Label>
+                                <Textarea
+                                  value={reviewComment}
+                                  onChange={(e) => setReviewComment(e.target.value)}
+                                  placeholder="Nhập nhận xét của bạn..."
+                                  rows={4}
+                                />
+                              </div>
+
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => handleReviewAction(reviewAction)}
+                                  disabled={!reviewAction}
+                                  className="flex-1"
+                                >
+                                  Gửi
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setIsReviewDialogOpen(false)}
+                                >
+                                  Hủy
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+
+                        <Button className="w-full" onClick={() => handleReviewAction('approve')}>
+                          <CheckCircleIcon className="mr-2 h-4 w-4" />
+                          Duyệt phiên bản
+                        </Button>
+                      </div>
+                    )}
+
+                    {selectedVersion.status === 'approved' && (
+                      <div className="space-y-2">
+                        <Button className="w-full" onClick={handlePublish}>
+                          <PlayCircleIcon className="mr-2 h-4 w-4" />
+                          Xuất bản
+                        </Button>
+
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button className="w-full" variant="outline">
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              Lên lịch rollout
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Lên lịch rollout cho {selectedVersion.id}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div>
+                                <Label>Scope</Label>
+                                <Select defaultValue="campus">
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="campus">Campus</SelectItem>
+                                    <SelectItem value="program">Program</SelectItem>
+                                    <SelectItem value="global">Global</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div>
+                                <Label>Scheduled Date</Label>
+                                <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                              </div>
+
+                              <Button onClick={createRolloutPlan} className="w-full">
+                                Tạo rollout plan
+                              </Button>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    )}
+
+                    {selectedVersion.status === 'published' && (
+                      <div className="space-y-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" className="w-full">
+                              <RotateCcwIcon className="mr-2 h-4 w-4" />
+                              Rollback
                           </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Rollback phiên bản</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <Label>Chọn phiên bản để rollback</Label>
-                            <Select onValueChange={handleRollback}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Chọn phiên bản" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {versions
-                                  .filter((v: any) => v.status === 'published' && v.id !== selectedVersion?.id)
-                                  .map((v: any) => (
-                                    <SelectItem key={v.id} value={v.id}>{v.id}</SelectItem>
-                                  ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Rollback phiên bản</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <Label>Chọn phiên bản để rollback</Label>
+                              <Select onValueChange={handleRollback}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Chọn phiên bản" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {versions
+                                    .filter((v: any) => v.status === 'published' && v.id !== selectedVersion?.id)
+                                    .map((v: any) => (
+                                      <SelectItem key={v.id} value={v.id}>{v.id}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
 
-                      <Button variant="outline" className="w-full">
-                        <ArchiveIcon className="mr-2 h-4 w-4" />
-                        Archive
-                      </Button>
-                    </div>
-                  )}
+                        <Button variant="outline" className="w-full">
+                          <ArchiveIcon className="mr-2 h-4 w-4" />
+                          Archive
+                        </Button>
+                      </div>
+                    )}
 
-                  <Button variant="outline" className="w-full">
-                    <GitBranchIcon className="mr-2 h-4 w-4" />
-                    Tạo phiên bản mới
-                  </Button>
-                </div>
+                    <Button variant="outline" className="w-full">
+                      <GitBranchIcon className="mr-2 h-4 w-4" />
+                      Tạo phiên bản mới
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">Chọn một phiên bản để xem thao tác</p>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>

@@ -484,11 +484,11 @@ const StructureEditor = () => {
           <CardContent>
             <ScrollArea className="h-[500px]">
               <div className="space-y-2">
-                {program.courses.map((course) => (
-                  <div key={course.id} className="space-y-1">
+                {program.courses?.map((course) => (
+                  <div key={course?.id || Math.random()} className="space-y-1">
                     <div
                       className={`p-2 rounded cursor-pointer hover:bg-gray-100 border ${
-                        selectedCourse.id === course.id ? "bg-blue-50 border-blue-200" : "border-transparent"
+                        selectedCourse?.id === course?.id ? "bg-blue-50 border-blue-200" : "border-transparent"
                       }`}
                       onClick={() => setSelectedCourse(course)}
                       draggable
@@ -528,9 +528,9 @@ const StructureEditor = () => {
                       </div>
                     </div>
 
-                    {selectedCourse.id === course.id && (
+                    {selectedCourse?.id === course?.id && (
                       <div className="ml-6 space-y-1">
-                        {course.units.map((unit) => {
+                        {course?.units?.map((unit) => {
                           const completeness = calculateCompleteness(unit);
                           const validationErrors = validateUnit(unit);
                           const hasErrors = validationErrors.some(e => e.type === 'error');
@@ -827,17 +827,7 @@ const StructureEditor = () => {
                               const skills = e.target.checked
                                 ? [...selectedUnit.skills, skill]
                                 : selectedUnit.skills.filter(s => s !== skill);
-                              setProgram(prev => ({
-                                ...prev,
-                                courses: prev.courses.map(course => ({
-                                  ...course,
-                                  units: course.units.map(unit =>
-                                    unit.id === selectedUnit.id
-                                      ? { ...unit, skills }
-                                      : unit
-                                  )
-                                }))
-                              }));
+                              setSelectedUnit(prev => prev ? { ...prev, skills } : null);
                             }}
                           />
                           <Label htmlFor={skill} className="text-sm">{skill}</Label>

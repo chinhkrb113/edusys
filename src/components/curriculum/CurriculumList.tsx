@@ -190,7 +190,11 @@ const getStatusBadge = (status: StatusType) => {
       className: "bg-gray-100 text-gray-800 border-gray-200",
     },
   };
-  const current = config[status];
+  const current = config[status] || {
+    label: "Không xác định",
+    icon: Pencil,
+    className: "bg-gray-100 text-gray-800 border-gray-200",
+  };
   const Icon = current.icon;
   return (
     <Badge variant="outline" className={`flex items-center gap-1.5 ${current.className}`}>

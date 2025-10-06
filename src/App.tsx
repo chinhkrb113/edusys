@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import LoginPage from "./pages/LoginPage";
 import { apiClient } from "./lib/api";
+import { authService } from "./services/authService";
 
 // Import placeholder pages for new modules
 import CurriculumManagementPage from "./pages/CurriculumManagementPage";
@@ -32,10 +33,57 @@ const queryClient = new QueryClient();
 
 // Simple authentication guard
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuthenticated = apiClient.isAuthenticated();
+  const isAuthenticated = authService.isAuthenticated();
 
   if (!isAuthenticated) {
     return <LoginPage />;
+  }
+
+  return <>{children}</>;
+};
+
+// Role-based route guard
+const RoleBasedRoute = ({
+  children,
+  allowedRoles
+}: {
+  children: React.ReactNode;
+  allowedRoles: string[]
+}) => {
+  const isAuthenticated = authService.isAuthenticated();
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  // For now, we'll assume user info is stored in localStorage or can be decoded from token
+  // In a real app, you'd want to get this from a user context or API call
+  const accessToken = authService.getAccessToken();
+  if (accessToken) {
+    try {
+      // Decode token to get user role (simplified - in real app use proper JWT library)
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const userRole = payload.role;
+
+      if (!allowedRoles.includes(userRole)) {
+        return (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+              <p className="text-gray-600 mb-4">
+                You don't have permission to access this page.
+              </p>
+              <p className="text-sm text-gray-500">
+                Required roles: {allowedRoles.join(', ')}
+              </p>
+            </div>
+          </div>
+        );
+      }
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return <LoginPage />;
+    }
   }
 
   return <>{children}</>;
@@ -121,11 +169,11 @@ const App = () => (
             </ProtectedRoute>
           } />
           <Route path="/users-roles-permissions" element={
-            <ProtectedRoute>
+            <RoleBasedRoute allowedRoles={['admin', 'super_admin']}>
               <MainLayout>
                 <UsersRolesPermissionsPage />
               </MainLayout>
-            </ProtectedRoute>
+            </RoleBasedRoute>
           } />
           <Route path="/erp-integration" element={
             <ProtectedRoute>
