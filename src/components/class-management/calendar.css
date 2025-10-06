@@ -1,0 +1,134 @@
+/* Custom styles for react-big-calendar */
+.rbc-calendar {
+  font-family: inherit;
+}
+
+.rbc-header {
+  padding: 8px 6px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.rbc-event {
+  border-radius: 4px;
+  border: none;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+}
+
+.rbc-event.rbc-selected {
+  outline: 2px solid #3b82f6;
+}
+
+.rbc-slot-selection {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.rbc-today {
+  background-color: #f0f9ff;
+}
+
+.rbc-toolbar {
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 0;
+}
+
+.rbc-toolbar button {
+  color: #374151;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.rbc-toolbar-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 20px;
+}
+
+.rbc-time-view .rbc-header {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rbc-time-content {
+  border-top: 1px solid #e5e7eb;
+}
+
+.rbc-current-time-indicator {
+  background-color: #ef4444;
+}
+
+.rbc-month-view {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.rbc-month-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rbc-date-cell {
+  padding: 4px;
+  text-align: center;
+}
+
+.rbc-date-cell > a {
+  color: #374151;
+  font-weight: 500;
+}
+
+.rbc-date-cell.rbc-off-range-bg {
+  background-color: #f9fafb;
+}
+
+.rbc-date-cell.rbc-now {
+  background-color: #dbeafe;
+}
+
+.rbc-date-cell.rbc-now > a {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* Custom event colors based on type */
+.rbc-event.offline-event {
+  background-color: #10b981;
+}
+
+.rbc-event.online-event {
+  background-color: #3b82f6;
+}
+
+.rbc-event.hybrid-event {
+  background-color: #8b5cf6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .rbc-toolbar-label {
+    margin: 10px 0;
+  }
+}
